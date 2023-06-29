@@ -1,0 +1,267 @@
+/* 
+Tomas Blanco Rivas
+1J
+Recu Primer Parcial - Montacarga
+*/
+#define A 7
+#define B 8
+#define C A1
+#define D A2
+#define E A3
+#define F 6
+#define G 5
+#define LED_VERDE 10
+#define LED_ROJO 9
+#define SUBIR 13
+#define BAJAR 12
+#define PARAR 11
+
+void PrenderSegmento(int numero);
+int PresionarBoton();
+int MoverMontaCarga(int prender, int contador);
+void PararMontaCarga(int presionar);
+void CalcularTiempoMovimiento(const char* mensaje);
+void PrenderApagarLed(int ledPrender, int ledApagar);
+
+int contador = 0;
+int subir = 1;
+int subirAnterior = 1;
+int bajar = 1;
+int bajarAnterior = 1;
+int parar = 1;
+int pararAnterior = 1;
+bool detenerTiempo = false;
+
+void setup()
+{
+  pinMode(A, OUTPUT);
+  pinMode(B, OUTPUT);
+  pinMode(C, OUTPUT);
+  pinMode(D, OUTPUT);
+  pinMode(E, OUTPUT);
+  pinMode(F, OUTPUT);
+  pinMode(G, OUTPUT);
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(SUBIR, INPUT_PULLUP);
+  pinMode(BAJAR, INPUT_PULLUP);
+  pinMode(PARAR, INPUT_PULLUP);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  int presionar = PresionarBoton();
+  PrenderSegmento(contador);
+  
+  if((presionar == SUBIR and contador < 9) 
+     or (presionar == BAJAR and contador > 0))
+  {
+  	contador = MoverMontaCarga(presionar, contador);
+  }
+  if(presionar == PARAR)
+  {
+    PararMontaCarga(presionar);
+  }
+  Serial.println("Piso: " + String(contador));
+}
+
+void PrenderSegmento(int numero)
+{
+  digitalWrite(A, LOW);
+  digitalWrite(B, LOW);
+  digitalWrite(C, LOW);
+  digitalWrite(D, LOW);
+  digitalWrite(E, LOW);
+  digitalWrite(F, LOW);
+  digitalWrite(G, LOW);
+  switch(numero)
+  {
+    case 0:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(F, HIGH);
+      break;
+    }
+    case 1:
+    {
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      break;
+    }
+    case 2:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+    case 3:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+    case 4:
+    {
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+    case 5:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+    case 6:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+    case 7:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      break;
+    }
+    case 8:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+    case 9:
+    {
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    }
+  }
+}
+
+int PresionarBoton()
+{
+  subir = digitalRead(SUBIR);
+  bajar = digitalRead(BAJAR);
+  parar = digitalRead(PARAR);
+  if(subir == 1) // No se presionó
+  {
+    subirAnterior = 1; //Antes no estaba presionada
+  }
+  if(bajar == 1)
+  {
+    bajarAnterior = 1;
+  }
+  if(parar == 1)
+  {
+    pararAnterior = 1;
+  }
+  
+  if(subir == 0 and subir != subirAnterior) //0 presionado
+  {
+    subirAnterior = subir;
+    return SUBIR;
+  }
+  if(bajar == 0 and bajar != bajarAnterior)
+  {
+    bajarAnterior = bajar;
+    return BAJAR;
+  }
+  if(parar == 0 and parar != pararAnterior)
+  {
+    pararAnterior = parar;
+    return PARAR;
+  }
+}
+
+int MoverMontaCarga(int presionar, int contador)
+{
+  const char* mensaje;
+  int tiempoDelay = 3000;
+  int tiempoRequerido = tiempoDelay;
+  
+  if(presionar == SUBIR)
+  {
+    contador++;
+    mensaje = "SUBIENDO";
+  }
+  else
+  {
+    contador--;
+    mensaje = "BAJANDO";
+  }  
+  CalcularTiempoMovimiento(mensaje);
+  return contador;
+}
+
+void PararMontaCarga(int presionar)
+{ 
+  int presionarSegundo = PresionarBoton();
+  while(presionar != presionarSegundo)
+  {
+    PrenderApagarLed(LED_ROJO, LED_VERDE);
+    Serial.println("PARADA");
+    presionarSegundo = PresionarBoton();
+  }
+  Serial.println("REANUDADO");
+  digitalWrite(LED_ROJO, LOW);
+}
+
+void CalcularTiempoMovimiento(const char* mensaje)
+{
+  int tiempoDelay = 3000;
+  int tiempoRequerido = tiempoDelay;
+  unsigned long tiempoInicio = millis();
+  
+  while(millis() - tiempoInicio < tiempoRequerido)
+  {
+    int tiempoTranscurrido = millis() - tiempoInicio;
+    int tiempoRestante = tiempoDelay - tiempoTranscurrido;
+    PrenderApagarLed(LED_VERDE, LED_ROJO);
+    int presionarSegundo = PresionarBoton();
+    if (presionarSegundo == PARAR)
+    {
+      PararMontaCarga(presionarSegundo);
+      tiempoInicio = millis();
+      tiempoRequerido = tiempoRestante;
+    }
+    Serial.println(mensaje);
+  }
+  digitalWrite(LED_VERDE, LOW);
+}
+
+void PrenderApagarLed(int ledPrender, int ledApagar)
+{
+  digitalWrite(ledPrender, HIGH);
+  digitalWrite(ledApagar, LOW);
+}
