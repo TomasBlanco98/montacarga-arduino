@@ -12,9 +12,11 @@ Recu Primer Parcial - Montacarga
 #define G 5
 #define LED_VERDE 10
 #define LED_ROJO 9
+#define LED_AZUL 4
 #define SUBIR 13
 #define BAJAR 12
 #define PARAR 11
+#define POLICIA 3
 
 void PrenderSegmento(int numero);
 int PresionarBoton();
@@ -22,6 +24,7 @@ int MoverMontaCarga(int prender, int contador);
 void PararMontaCarga(int presionar);
 void CalcularTiempoMovimiento(const char* mensaje);
 void PrenderApagarLed(int ledPrender, int ledApagar);
+void LlamarPolicia(int presionar);
 
 int contador = 0;
 int subir = 1;
@@ -30,6 +33,8 @@ int bajar = 1;
 int bajarAnterior = 1;
 int parar = 1;
 int pararAnterior = 1;
+int policia  = 1;
+int policiaAnterior = 1;
 bool detenerTiempo = false;
 
 void setup()
@@ -43,9 +48,11 @@ void setup()
   pinMode(G, OUTPUT);
   pinMode(LED_ROJO, OUTPUT);
   pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AZUL, OUTPUT);
   pinMode(SUBIR, INPUT_PULLUP);
   pinMode(BAJAR, INPUT_PULLUP);
   pinMode(PARAR, INPUT_PULLUP);
+  pinMode(POLICIA, INPUT_PULLUP);
   Serial.begin(9600);
 }
 
@@ -62,6 +69,10 @@ void loop()
   if(presionar == PARAR)
   {
     PararMontaCarga(presionar);
+  }
+  if(presionar == POLICIA)
+  {
+    LlamarPolicia(presionar);
   }
   Serial.println("Piso: " + String(contador));
 }
@@ -174,6 +185,7 @@ int PresionarBoton()
   subir = digitalRead(SUBIR);
   bajar = digitalRead(BAJAR);
   parar = digitalRead(PARAR);
+  policia = digitalRead(POLICIA);
   if(subir == 1) // No se presionó
   {
     subirAnterior = 1; //Antes no estaba presionada
@@ -185,6 +197,10 @@ int PresionarBoton()
   if(parar == 1)
   {
     pararAnterior = 1;
+  }
+  if(policia == 1)
+  {
+    policiaAnterior = 1;
   }
   
   if(subir == 0 and subir != subirAnterior) //0 presionado
@@ -201,6 +217,11 @@ int PresionarBoton()
   {
     pararAnterior = parar;
     return PARAR;
+  }
+  if(policia == 0 and policia != policiaAnterior)
+  {
+    policiaAnterior = policia;
+    return POLICIA;
   }
 }
 
@@ -232,9 +253,26 @@ void PararMontaCarga(int presionar)
     PrenderApagarLed(LED_ROJO, LED_VERDE);
     Serial.println("PARADA");
     presionarSegundo = PresionarBoton();
+    if(presionarSegundo == POLICIA)
+    {
+      LlamarPolicia(presionarSegundo);
+    }
   }
   Serial.println("REANUDADO");
   digitalWrite(LED_ROJO, LOW);
+}
+
+void LlamarPolicia(int presionar)
+{ 
+  int presionarSegundo = PresionarBoton();
+  while(presionar != presionarSegundo)
+  {
+    digitalWrite(LED_AZUL, HIGH);
+    Serial.println("LLAMANDO A LA POLICIA");
+    presionarSegundo = PresionarBoton();
+  }
+  Serial.println("LLAMADA FINALIZADA");
+  digitalWrite(LED_AZUL, LOW);
 }
 
 void CalcularTiempoMovimiento(const char* mensaje)
